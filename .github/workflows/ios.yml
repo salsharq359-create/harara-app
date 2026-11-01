@@ -11,26 +11,14 @@ on:
 
 jobs:
   ios:
-    runs-on: macos-14
+    runs-on: macos-15
     timeout-minutes: 120
 
     steps:
       - name: Get the code
         uses: actions/checkout@v4
         with:
-          path: repo
-
-      # The repository holds the app as Harara_app_python.zip (uploaded from Windows).
-      # Unzipping gives the harara-app folder. If the files are uploaded unzipped instead,
-      # the repository itself is used.
-      - name: Unpack the app
-        run: |
-          if [ -f repo/Harara_app_python.zip ]; then
-            unzip -q repo/Harara_app_python.zip
-          else
-            mv repo harara-app
-          fi
-          test -f harara-app/main.py && ls harara-app
+          path: harara-app
 
       - name: Python 3.11 (same version kivy-ios builds for the phone)
         uses: actions/setup-python@v5
