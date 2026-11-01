@@ -20,6 +20,23 @@ jobs:
         with:
           path: harara-app
 
+      # The repo holds the code as Harara_app_python.zip. Without this step the app
+      # has no main.py inside it and closes the moment it is opened.
+      - name: Unzip the app code
+        run: |
+          cd harara-app
+          if [ ! -f main.py ]; then
+            ZIP=$(ls *.zip | head -1)
+            echo "Unzipping $ZIP"
+            rm -rf /tmp/src && unzip -q -o "$ZIP" -d /tmp/src
+            SRC=$(dirname "$(find /tmp/src -name main.py -not -path '*/service/*' | head -1)")
+            cp -R "$SRC"/. .
+            rm -f *.zip ios.yml
+          fi
+          rm -rf tests tools .github README.md
+          test -f main.py && test -f harara.kv
+          ls -R
+
       - name: Python 3.11 (same version kivy-ios builds for the phone)
         uses: actions/setup-python@v5
         with:
@@ -63,6 +80,11 @@ jobs:
                      CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" \
                      build | tail -200
           test "${PIPESTATUS[0]}" -eq 0
+
+      - name: Check main.py is inside the app
+        run: |
+          APP=$(find xbuild -maxdepth 3 -name "*.app" -type d | head -1)
+          find "$APP" -name "main.py*" | grep . || { echo "main.py is missing from the app"; exit 1; }
 
       - name: Package Harara.ipa
         run: |
