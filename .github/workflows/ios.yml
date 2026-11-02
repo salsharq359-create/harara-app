@@ -11,7 +11,7 @@ on:
 
 jobs:
   ios:
-        runs-on: macos-15-intel
+    runs-on: macos-15-intel
     timeout-minutes: 120
 
     steps:
@@ -56,7 +56,7 @@ jobs:
           path: |
             build
             dist
-        key: kivy-ios-2025.5.17-iphoneos-arm64-intel-v1
+          key: kivy-ios-2025.5.17-iphoneos-arm64-intel-v1
 
       - name: Build Python, Kivy, pyobjus and plyer for iPhone
         if: steps.cache.outputs.cache-hit != 'true'
