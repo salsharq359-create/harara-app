@@ -124,7 +124,36 @@ jobs:
           test -n "$ICONSET"
           cp harara-app/icon.png "$ICONSET/icon-1024.png"
           printf '%s\n' '{' '  "images" : [' '    { "filename" : "icon-1024.png", "idiom" : "universal", "platform" : "ios", "size" : "1024x1024" }' '  ],' '  "info" : { "author" : "xcode", "version" : 1 }' '}' > "$ICONSET/Contents.json"
+            - name: Put the Harara logo on the launch screen
+        run: |
+          pip install pillow
+          echo "--- images and launch files in the Xcode template ---"
+          find harara-ios \( -name "*.png" -o -name "*.xib" -o -name "*.storyboard" \) -not -path "*/build/*" | sort
+          python - <<'PY'
+          import glob
+          from PIL import Image
 
+          splash = Image.open("harara-app/splash.png").convert("RGBA")
+          hits = 0
+          for path in glob.glob("harara-ios/**/*.png", recursive=True):
+              low = path.lower()
+              if "appicon" in low or "/build/" in low:
+                  continue
+              if not any(k in low for k in ("launch", "default", "splash")):
+                  continue
+              try:
+                  w, h = Image.open(path).size
+              except Exception:
+                  continue
+              bg = Image.new("RGB", (w, h), (0, 0, 0))
+              logo = splash.copy()
+              logo.thumbnail((int(min(w, h) * 0.4),) * 2, Image.LANCZOS)
+              bg.paste(logo, ((w - logo.width) // 2, (h - logo.height) // 2), logo)
+              bg.save(path)
+              hits += 1
+              print("launch image ->", path, w, h)
+          print("replaced", hits, "launch images")
+          PY
       - name: Build the app (no signing; Sideloadly signs it later)
         run: |
           # -target (the template has no shared scheme); deployment target raised from the
