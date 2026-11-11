@@ -1,0 +1,834 @@
+#:import dp kivy.metrics.dp
+#:set NAVY (0.075, 0.157, 0.247, 1)
+#:set INK (0.075, 0.157, 0.247, 1)
+#:set GREY (0.29, 0.353, 0.427, 1)
+#:set ORANGE (0.918, 0.345, 0.047, 1)
+#:set ORANGE_TEXT (0.604, 0.204, 0.071, 1)
+#:set TEAL (0.059, 0.463, 0.431, 1)
+#:set CREAM (0.984, 0.98, 0.969, 1)
+#:set CARD (0.949, 0.957, 0.969, 1)
+#:set WARM_CARD (0.992, 0.941, 0.902, 1)
+#:set MINT (0.89, 0.949, 0.937, 1)
+#:set WHITE (1, 1, 1, 1)
+
+# ---------- basic text styles
+<Txt@Label>:
+    color: INK
+    font_size: '14sp'
+    text_size: self.width, None
+    size_hint_y: None
+    height: self.texture_size[1]
+    halign: 'left'
+    valign: 'middle'
+
+<Title@Txt>:
+    font_size: '20sp'
+    bold: True
+
+<Small@Txt>:
+    font_size: '12sp'
+    color: GREY
+
+# ---------- building blocks
+<Card>:
+    canvas.before:
+        Color:
+            rgba: self.bg
+        RoundedRectangle:
+            pos: self.pos
+            size: self.size
+            radius: [self.radius]
+
+<Pill>:
+    background_normal: ''
+    background_down: ''
+    background_color: 0, 0, 0, 0
+    color: self.fg
+    bold: True
+    font_size: '15sp'
+    size_hint_y: None
+    height: dp(52)
+    canvas.before:
+        Color:
+            rgba: (0, 0, 0, 0) if self.outline else ([c * (0.8 if self.state == 'down' else 1) for c in self.bg[:3]] + [1])
+        RoundedRectangle:
+            pos: self.pos
+            size: self.size
+            radius: [dp(14)]
+        Color:
+            rgba: self.bg if self.outline else (0, 0, 0, 0)
+        Line:
+            rounded_rectangle: (self.x + 1, self.y + 1, self.width - 2, self.height - 2, dp(14))
+            width: 1.4
+
+<Logo>:
+    canvas:
+        Color:
+            rgba: NAVY
+        RoundedRectangle:
+            pos: self.pos
+            size: self.size
+            radius: [self.width * 0.24]
+        Color:
+            rgba: WHITE
+        Line:
+            rounded_rectangle: (self.center_x - self.width * 0.08, self.y + self.height * 0.36, self.width * 0.16, self.height * 0.46, self.width * 0.08)
+            width: max(1.5, self.width * 0.035)
+        Line:
+            circle: (self.center_x, self.y + self.height * 0.3, self.width * 0.14)
+            width: max(1.5, self.width * 0.035)
+        Color:
+            rgba: ORANGE
+        Ellipse:
+            pos: self.center_x - self.width * 0.11, self.y + self.height * 0.3 - self.width * 0.11
+            size: self.width * 0.22, self.width * 0.22
+        Rectangle:
+            pos: self.center_x - self.width * 0.035, self.y + self.height * 0.3
+            size: self.width * 0.07, self.height * 0.32
+
+<TempGauge>:
+    canvas:
+        Color:
+            rgba: (0.965, 0.894, 0.847, 1)
+        Line:
+            circle: (self.center_x, self.center_y, min(self.width, self.height) / 2 - dp(10))
+            width: dp(9)
+        Color:
+            rgba: self.ring
+        Line:
+            circle: (self.center_x, self.center_y, min(self.width, self.height) / 2 - dp(10), 0, 360 * self.frac)
+            width: dp(9)
+            cap: 'round'
+
+<UsageBar>:
+    size_hint_y: None
+    height: dp(6)
+    canvas:
+        Color:
+            rgba: (0.867, 0.89, 0.918, 1)
+        RoundedRectangle:
+            pos: self.pos
+            size: self.size
+            radius: [dp(3)]
+        Color:
+            rgba: self.bar
+        RoundedRectangle:
+            pos: self.pos
+            size: self.width * self.share, self.height
+            radius: [dp(3)]
+
+<Header@BoxLayout>:
+    title: ''
+    back: ''
+    size_hint_y: None
+    height: dp(48)
+    spacing: dp(6)
+    Pill:
+        text: '<'
+        size_hint: None, None
+        size: (dp(44), dp(44)) if root.back else (0, 0)
+        opacity: 1 if root.back else 0
+        disabled: not root.back
+        bg: 1, 1, 1, 1
+        fg: NAVY
+        font_size: '20sp'
+        on_release: app.go(root.back)
+    Label:
+        text: root.title
+        color: INK
+        bold: True
+        font_size: '20sp'
+        text_size: self.size
+        halign: 'left'
+        valign: 'middle'
+
+<NavBar>:
+    size_hint_y: None
+    height: dp(64)
+    padding: dp(8), dp(6)
+    spacing: dp(6)
+    canvas.before:
+        Color:
+            rgba: (0.933, 0.941, 0.953, 1)
+        Rectangle:
+            pos: self.x, self.top - 1
+            size: self.width, 1
+    Pill:
+        text: 'Home'
+        bg: CARD if root.current == 'home' else WHITE
+        fg: NAVY if root.current == 'home' else GREY
+        font_size: '13sp'
+        on_release: app.go('home')
+    Pill:
+        text: 'Log'
+        bg: CARD if root.current == 'log' else WHITE
+        fg: NAVY if root.current == 'log' else GREY
+        font_size: '13sp'
+        on_release: app.go('log')
+    Pill:
+        text: 'Apps'
+        bg: CARD if root.current == 'apps' else WHITE
+        fg: NAVY if root.current == 'apps' else GREY
+        font_size: '13sp'
+        on_release: app.go('apps')
+    Pill:
+        text: 'Settings'
+        bg: CARD if root.current == 'settings' else WHITE
+        fg: NAVY if root.current == 'settings' else GREY
+        font_size: '13sp'
+        on_release: app.go('settings')
+
+<Stat@Card>:
+    value: ''
+    label: ''
+    value_color: INK
+    orientation: 'vertical'
+    padding: dp(8)
+    Label:
+        text: root.value
+        color: root.value_color
+        bold: True
+        font_size: '17sp'
+    Label:
+        text: root.label
+        color: GREY
+        font_size: '11sp'
+
+<ActionRow>:
+    size_hint_y: None
+    height: dp(68)
+    padding: dp(14), dp(8)
+    spacing: dp(10)
+    BoxLayout:
+        orientation: 'vertical'
+        Label:
+            text: root.title
+            color: INK
+            bold: True
+            font_size: '14sp'
+            text_size: self.size
+            halign: 'left'
+            valign: 'bottom'
+        Label:
+            text: root.detail
+            color: GREY
+            font_size: '11sp'
+            text_size: self.size
+            halign: 'left'
+            valign: 'top'
+            shorten: True
+
+<AppRow>:
+    orientation: 'vertical'
+    size_hint_y: None
+    height: dp(64)
+    padding: dp(14), dp(10)
+    spacing: dp(8)
+    BoxLayout:
+        Label:
+            text: root.name
+            color: INK
+            bold: True
+            font_size: '14sp'
+            text_size: self.size
+            halign: 'left'
+            valign: 'middle'
+        Label:
+            text: root.minutes
+            color: INK
+            bold: True
+            font_size: '13sp'
+            size_hint_x: None
+            width: dp(70)
+            text_size: self.size
+            halign: 'right'
+            valign: 'middle'
+    UsageBar:
+        share: root.share
+        bar: root.bar
+
+<SettingRow@Card>:
+    text: ''
+    size_hint_y: None
+    height: dp(56)
+    padding: dp(14), 0
+    Label:
+        text: root.text
+        color: INK
+        bold: True
+        font_size: '14sp'
+        text_size: self.size
+        halign: 'left'
+        valign: 'middle'
+
+<Screen>:
+    canvas.before:
+        Color:
+            rgba: WHITE
+        Rectangle:
+            pos: self.pos
+            size: self.size
+
+# ================================================================ 1 Welcome
+<WelcomeScreen>:
+    canvas.before:
+        Color:
+            rgba: CREAM
+        Rectangle:
+            pos: self.pos
+            size: self.size
+    BoxLayout:
+        orientation: 'vertical'
+        padding: dp(28), dp(70), dp(28), dp(32)
+        spacing: dp(12)
+        AnchorLayout:
+            size_hint_y: None
+            height: dp(110)
+            Logo:
+                size_hint: None, None
+                size: dp(104), dp(104)
+        Label:
+            text: 'Harara'
+            color: INK
+            bold: True
+            font_size: '38sp'
+            size_hint_y: None
+            height: dp(54)
+        Label:
+            text: 'Watch your phone… before it overheats'
+            color: GREY
+            font_size: '15sp'
+            size_hint_y: None
+            height: dp(24)
+        Widget:
+            size_hint_y: None
+            height: dp(18)
+        Txt:
+            text: '•  Live heat-level monitoring' if app.platform_name == 'ios' else '•  Live temperature monitoring'
+            font_size: '15sp'
+        Txt:
+            text: '•  Alert on screen when it gets Hot' if app.platform_name == 'ios' else '•  Alert when it passes your safe limit'
+            font_size: '15sp'
+        Txt:
+            text: '•  One-tap practical fixes'
+            font_size: '15sp'
+        Txt:
+            text: '•  Honest: it measures heat, it does not fake “cooling”'
+            font_size: '15sp'
+        Widget:
+        Pill:
+            text: 'Start monitoring'
+            on_release: app.finish_onboarding()
+        Pill:
+            text: 'Allow notifications'
+            outline: True
+            fg: NAVY
+            height: 0 if app.platform_name == 'ios' else dp(52)
+            opacity: 0 if app.platform_name == 'ios' else 1
+            disabled: app.platform_name == 'ios'
+            on_release: app.finish_onboarding()
+
+# ================================================================ 2 Home
+<HomeScreen>:
+    BoxLayout:
+        orientation: 'vertical'
+        BoxLayout:
+            orientation: 'vertical'
+            padding: dp(18), dp(16), dp(18), dp(10)
+            spacing: dp(14)
+            Header:
+                title: 'Home'
+            FloatLayout:
+                size_hint_y: None
+                height: dp(230)
+                TempGauge:
+                    size_hint: None, None
+                    size: dp(220), dp(220)
+                    pos_hint: {'center_x': .5, 'center_y': .5}
+                    frac: app.gauge_frac
+                    ring: (0.059, 0.463, 0.431, 1) if app.level == 'normal' else ((0.706, 0.325, 0.035, 1) if app.level == 'warm' else ((0.918, 0.345, 0.047, 1) if app.level == 'hot' else (0.498, 0.114, 0.114, 1)))
+                Label:
+                    text: app.temp_text
+                    color: INK
+                    bold: True
+                    font_size: '54sp' if app.platform_name != 'ios' else '34sp'
+                    pos_hint: {'center_x': .5, 'center_y': .58}
+                    size_hint: None, None
+                    size: dp(200), dp(70)
+                Label:
+                    text: 'Battery temp' if app.platform_name != 'ios' else 'Heat level'
+                    color: GREY
+                    font_size: '13sp'
+                    pos_hint: {'center_x': .5, 'center_y': .4}
+                    size_hint: None, None
+                    size: dp(160), dp(20)
+                Label:
+                    text: app.level_text
+                    color: (0.604, 0.204, 0.071, 1) if app.level in ('hot', 'critical') else INK
+                    bold: True
+                    font_size: '13sp'
+                    pos_hint: {'center_x': .5, 'center_y': .29}
+                    size_hint: None, None
+                    size: dp(80), dp(26)
+                    canvas.before:
+                        Color:
+                            rgba: (0.992, 0.878, 0.8, 1) if app.level in ('hot', 'critical') else (0.89, 0.949, 0.937, 1)
+                        RoundedRectangle:
+                            pos: self.pos
+                            size: self.size
+                            radius: [dp(13)]
+            GridLayout:
+                cols: 3
+                spacing: dp(8)
+                size_hint_y: None
+                height: dp(64)
+                Stat:
+                    value: app.battery_text
+                    label: 'Battery'
+                Stat:
+                    value: app.charger_text
+                    label: 'Charger'
+                Stat:
+                    value: app.change_text
+                    label: app.change_label
+                    value_color: (0.604, 0.204, 0.071, 1) if app.change_text.startswith('+') else INK
+            Card:
+                bg: WARM_CARD if app.level in ('hot', 'critical') else MINT
+                size_hint_y: None
+                height: tip.texture_size[1] + dp(28)
+                padding: dp(14)
+                Label:
+                    id: tip
+                    text: app.tip_text
+                    color: INK
+                    font_size: '14sp'
+                    text_size: self.width, None
+            Pill:
+                text: 'See suggested actions'
+                bg: (0.761, 0.255, 0.047, 1)
+                on_release: app.go('actions')
+            Widget:
+        NavBar:
+            current: 'home'
+
+# ================================================================ 3 Alert
+<AlertScreen>:
+    canvas.before:
+        Color:
+            rgba: (0.106, 0.184, 0.275, 1)
+        Rectangle:
+            pos: self.pos
+            size: self.size
+    BoxLayout:
+        orientation: 'vertical'
+        padding: dp(20), dp(80), dp(20), dp(30)
+        spacing: dp(14)
+        Label:
+            text: app.alert_big
+            color: WHITE
+            bold: True
+            font_size: '72sp'
+            size_hint_y: None
+            height: dp(96)
+        Label:
+            text: 'Alerts at: Hot or Critical' if app.platform_name == 'ios' else 'Safe limit: ' + app.limit_text
+            color: (0.72, 0.77, 0.82, 1)
+            font_size: '15sp'
+            size_hint_y: None
+            height: dp(24)
+        Widget:
+            size_hint_y: None
+            height: dp(20)
+        Card:
+            bg: WHITE
+            orientation: 'vertical'
+            size_hint_y: None
+            height: dp(190)
+            padding: dp(16)
+            spacing: dp(8)
+            Txt:
+                text: 'Harara · now'
+                font_size: '12sp'
+                color: GREY
+            Txt:
+                text: app.alert_title or 'Your phone is hot'
+                font_size: '18sp'
+                bold: True
+            Txt:
+                text: app.alert_body
+                font_size: '13sp'
+                color: GREY
+            Widget:
+            BoxLayout:
+                size_hint_y: None
+                height: dp(48)
+                spacing: dp(8)
+                Pill:
+                    text: 'See fixes'
+                    height: dp(48)
+                    bg: (0.761, 0.255, 0.047, 1)
+                    on_release: app.go('actions')
+                Pill:
+                    text: 'Dismiss'
+                    height: dp(48)
+                    bg: CARD
+                    fg: NAVY
+                    on_release: app.go('home')
+        Card:
+            bg: (1, 1, 1, 0.12)
+            size_hint_y: None
+            height: dp(56)
+            padding: dp(14), dp(8)
+            Label:
+                text: 'Tip: keep the phone out of direct sunlight'
+                color: (0.9, 0.925, 0.95, 1)
+                font_size: '13sp'
+                text_size: self.size
+                halign: 'left'
+                valign: 'middle'
+        Widget:
+
+# ================================================================ 4 Actions
+<ActionsScreen>:
+    BoxLayout:
+        orientation: 'vertical'
+        padding: dp(18), dp(16), dp(18), dp(18)
+        spacing: dp(12)
+        Header:
+            title: 'Suggested Actions'
+            back: 'home'
+        ScrollView:
+            BoxLayout:
+                id: rows
+                orientation: 'vertical'
+                spacing: dp(8)
+                size_hint_y: None
+                height: self.minimum_height
+        Card:
+            bg: MINT
+            size_hint_y: None
+            height: dp(76)
+            padding: dp(14), dp(8)
+            spacing: dp(12)
+            Label:
+                text: app.temp_text
+                color: TEAL
+                bold: True
+                font_size: '22sp' if app.platform_name == 'ios' else '30sp'
+                size_hint_x: None
+                width: dp(100) if app.platform_name == 'ios' else dp(80)
+            Label:
+                text: app.after_text or ('Apply the actions and watch the heat level here.' if app.platform_name == 'ios' else 'Apply the actions and watch the temperature drop here.')
+                color: (0.075, 0.306, 0.282, 1)
+                font_size: '13sp'
+                text_size: self.size
+                halign: 'left'
+                valign: 'middle'
+
+# ================================================================ 5 Log
+<LogScreen>:
+    BoxLayout:
+        orientation: 'vertical'
+        BoxLayout:
+            orientation: 'vertical'
+            padding: dp(18), dp(16), dp(18), dp(10)
+            spacing: dp(12)
+            Header:
+                title: 'Heat Log' if app.platform_name == 'ios' else 'Temperature Log'
+            BoxLayout:
+                size_hint_y: None
+                height: dp(44)
+                spacing: dp(6)
+                Pill:
+                    text: 'Today'
+                    height: dp(44)
+                    bg: NAVY if not root.week else CARD
+                    fg: WHITE if not root.week else GREY
+                    on_release: root.week = False
+                Pill:
+                    text: 'Week'
+                    height: dp(44)
+                    bg: NAVY if root.week else CARD
+                    fg: WHITE if root.week else GREY
+                    on_release: root.week = True
+            BarChart:
+                id: chart
+                size_hint_y: None
+                height: dp(180)
+            Label:
+                id: axis
+                color: GREY
+                font_size: '11sp'
+                size_hint_y: None
+                height: dp(16)
+            GridLayout:
+                cols: 3
+                spacing: dp(8)
+                size_hint_y: None
+                height: dp(64)
+                Stat:
+                    id: peak
+                    bg: WARM_CARD
+                    label: 'Peak'
+                    value_color: (0.604, 0.204, 0.071, 1)
+                Stat:
+                    id: avg
+                    label: 'Average'
+                Stat:
+                    id: alerts
+                    label: 'Alerts'
+            Title:
+                text: 'Hottest moment'
+                font_size: '15sp'
+            Card:
+                size_hint_y: None
+                height: dp(52)
+                padding: dp(14), 0
+                Label:
+                    id: hottest
+                    color: INK
+                    font_size: '13sp'
+                    text_size: self.size
+                    halign: 'left'
+                    valign: 'middle'
+                Label:
+                    id: hottest_temp
+                    color: (0.604, 0.204, 0.071, 1)
+                    bold: True
+                    font_size: '15sp'
+                    size_hint_x: None
+                    width: dp(50)
+            Widget:
+        NavBar:
+            current: 'log'
+
+# ================================================================ 6 Apps
+<AppsScreen>:
+    BoxLayout:
+        orientation: 'vertical'
+        ScrollView:
+            do_scroll_x: False
+            bar_width: dp(4)
+            BoxLayout:
+                orientation: 'vertical'
+                size_hint_y: None
+                height: self.minimum_height
+                padding: dp(18), dp(16), dp(18), dp(10)
+                spacing: dp(10)
+                Header:
+                    title: 'Power-Hungry Apps'
+                Small:
+                    id: note
+                    text: ''
+                BoxLayout:
+                    id: rows
+                    orientation: 'vertical'
+                    spacing: dp(8)
+                    size_hint_y: None
+                    height: self.minimum_height
+                Header:
+                    title: 'Track an app'
+                Small:
+                    text: 'Start, use the app, then stop. Harara records heat and battery during it. iPhone Shortcuts: open harara://start?app=Name or harara://stop.'
+                TextInput:
+                    id: session_name
+                    hint_text: 'App name, e.g. Game or Video'
+                    multiline: False
+                    size_hint_y: None
+                    height: dp(46)
+                    font_size: '15sp'
+                    padding: dp(12), dp(12)
+                Pill:
+                    id: session_btn
+                    text: 'Start session'
+                    size_hint_y: None
+                    height: dp(48)
+                    on_release: app.toggle_session(session_name.text)
+                Small:
+                    id: session_status
+                    text: ''
+                BoxLayout:
+                    id: session_rows
+                    orientation: 'vertical'
+                    spacing: dp(8)
+                    size_hint_y: None
+                    height: self.minimum_height
+                Pill:
+                    text: 'Open iPhone Settings' if app.platform_name == 'ios' else 'Manage apps in Settings'
+                    size_hint_y: None
+                    height: dp(48)
+                    on_release: app.manage_apps()
+        NavBar:
+            current: 'apps'
+
+<SessionRow>:
+    orientation: 'vertical'
+    size_hint_y: None
+    height: dp(64)
+    padding: dp(14), dp(10)
+    spacing: dp(4)
+    Label:
+        text: root.title
+        color: INK
+        bold: True
+        font_size: '14sp'
+        text_size: self.size
+        halign: 'left'
+        valign: 'middle'
+    Label:
+        text: root.detail
+        color: GREY
+        font_size: '12sp'
+        text_size: self.size
+        halign: 'left'
+        valign: 'top'
+
+# ================================================================ 7 Settings
+<SettingsScreen>:
+    BoxLayout:
+        orientation: 'vertical'
+        ScrollView:
+            do_scroll_x: False
+            bar_width: dp(4)
+            BoxLayout:
+                orientation: 'vertical'
+                size_hint_y: None
+                height: self.minimum_height
+                padding: dp(18), dp(16), dp(18), dp(10)
+                spacing: dp(10)
+                Header:
+                    title: 'Settings'
+                Card:
+                    orientation: 'vertical'
+                    size_hint_y: None
+                    height: 0 if app.platform_name == 'ios' else dp(104)
+                    opacity: 0 if app.platform_name == 'ios' else 1
+                    disabled: app.platform_name == 'ios'
+                    padding: (0, 0) if app.platform_name == 'ios' else (dp(14), dp(10))
+                    BoxLayout:
+                        Label:
+                            text: 'Alert limit'
+                            color: INK
+                            bold: True
+                            font_size: '14sp'
+                            text_size: self.size
+                            halign: 'left'
+                            valign: 'middle'
+                        Label:
+                            text: app.limit_text
+                            color: (0.604, 0.204, 0.071, 1)
+                            bold: True
+                            font_size: '15sp'
+                            text_size: self.size
+                            halign: 'right'
+                            valign: 'middle'
+                    Slider:
+                        id: limit
+                        size_hint_y: None
+                        height: dp(48)
+                        min: 35
+                        max: 48
+                        step: 1
+                        value: 40
+                        cursor_size: dp(36), dp(36)
+                        value_track: True
+                        value_track_color: ORANGE
+                        on_value: app.set_limit(self.value)
+                SettingRow:
+                    text: 'Background monitoring'
+                    height: 0 if app.platform_name == 'ios' else dp(56)
+                    opacity: 0 if app.platform_name == 'ios' else 1
+                    disabled: app.platform_name == 'ios'
+                    Switch:
+                        id: bg
+                        size_hint_x: None
+                        width: dp(80)
+                        on_active: app.set_setting('background_monitoring', self.active)
+                SettingRow:
+                    text: 'Auto-lower brightness when hot'
+                    Switch:
+                        id: auto
+                        size_hint_x: None
+                        width: dp(80)
+                        on_active: app.set_setting('auto_brightness', self.active)
+                SettingRow:
+                    text: 'Alert while charging'
+                    Switch:
+                        id: charging
+                        size_hint_x: None
+                        width: dp(80)
+                        on_active: app.set_setting('alert_while_charging', self.active)
+                SettingRow:
+                    text: 'Weekly report'
+                    Switch:
+                        id: weekly
+                        size_hint_x: None
+                        width: dp(80)
+                        on_active: app.set_setting('weekly_report', self.active)
+                SettingRow:
+                    text: 'Unit'
+                    height: 0 if app.platform_name == 'ios' else dp(56)
+                    opacity: 0 if app.platform_name == 'ios' else 1
+                    disabled: app.platform_name == 'ios'
+                    Pill:
+                        text: '°C'
+                        size_hint: None, None
+                        size: dp(56), dp(44)
+                        bg: NAVY if app.unit == 'C' else CARD
+                        fg: WHITE if app.unit == 'C' else GREY
+                        on_release: app.set_unit('C')
+                    Widget:
+                        size_hint_x: None
+                        width: dp(6)
+                    Pill:
+                        text: '°F'
+                        size_hint: None, None
+                        size: dp(56), dp(44)
+                        bg: NAVY if app.unit == 'F' else CARD
+                        fg: WHITE if app.unit == 'F' else GREY
+                        on_release: app.set_unit('F')
+                Card:
+                    orientation: 'vertical'
+                    size_hint_y: None
+                    height: dp(128)
+                    padding: dp(14), dp(10)
+                    spacing: dp(8)
+                    Label:
+                        text: 'Encrypted backup (AES-256)'
+                        color: INK
+                        bold: True
+                        font_size: '14sp'
+                        size_hint_y: None
+                        height: dp(20)
+                        text_size: self.size
+                        halign: 'left'
+                        valign: 'middle'
+                    BoxLayout:
+                        size_hint_y: None
+                        height: dp(44)
+                        spacing: dp(8)
+                        TextInput:
+                            id: passphrase
+                            hint_text: 'Passphrase (8+ characters)'
+                            password: True
+                            multiline: False
+                            font_size: '14sp'
+                            padding: dp(10), dp(12)
+                        Pill:
+                            text: 'Export'
+                            size_hint_x: None
+                            width: dp(90)
+                            height: dp(44)
+                            on_release: app.export_backup(passphrase.text)
+                    Label:
+                        text: app.backup_status
+                        color: GREY
+                        font_size: '11sp'
+                        text_size: self.width, None
+                        size_hint_y: None
+                        height: self.texture_size[1]
+                        halign: 'left'
+                Small:
+                    text: ('On iPhone, Apple only shares a heat level (Normal, Warm, Hot, Critical), not a temperature, so there is no °C limit to set: Harara alerts at Hot or Critical. iPhone also pauses Harara when you leave it, so checks and alerts happen while the app is open.') if app.platform_name == 'ios' else 'On iPhone, Apple only shares a heat level (Normal, Warm, Hot, Critical), so alerts use that level instead of a number.'
+        NavBar:
+            current: 'settings'

@@ -1,0 +1,15 @@
+# Build output and local files (keep the GitHub repository small)
+.buildozer/
+bin/
+.venv/
+venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+harara.db
+*.harara
+build.log
+*.apk
+*.ipa
+plyer/
+plyer-*.dist-info/
